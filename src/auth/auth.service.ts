@@ -73,6 +73,20 @@ export class AuthService {
   }
 
 
+  async refreshTokens( refreshToken: string ) {
+        const token = await this.RefreshTokenModel.findOneAndDelete({
+             token: refreshToken,
+             expiryDate: { $gt: new Date() },
+             });
+        if (!token) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
+
+        return this.genrateUserTokens(token.userId);
+
+  }
+
+
 
   async genrateUserTokens(userId) {
     const accessToken = await this.jwtService.sign(
@@ -93,7 +107,7 @@ export class AuthService {
     
   async storeRefreshToken(refreshToken: string, userId: string) {
     const expiryDate = new Date();
-    expiryDate.setHours(expiryDate.getDate() + 3); // Set expiry to
+    expiryDate.setDate(expiryDate.getDate() + 3);
 
     await this.RefreshTokenModel.create({
       token: refreshToken,
