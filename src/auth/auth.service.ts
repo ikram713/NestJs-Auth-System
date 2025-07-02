@@ -74,7 +74,7 @@ export class AuthService {
 
 
   async refreshTokens( refreshToken: string ) {
-        const token = await this.RefreshTokenModel.findOneAndDelete({
+        const token = await this.RefreshTokenModel.findOne({
              token: refreshToken,
              expiryDate: { $gt: new Date() },
              });
@@ -91,7 +91,7 @@ export class AuthService {
   async genrateUserTokens(userId) {
     const accessToken = await this.jwtService.sign(
       { userId },
-      { expiresIn: '1h' },
+      { expiresIn:'1h'},
     );
 
     const RefreshToken = uuid4();
@@ -105,14 +105,15 @@ export class AuthService {
 
 
     
-  async storeRefreshToken(refreshToken: string, userId: string) {
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 3);
+async storeRefreshToken(refreshToken: string, userId: string) {
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 3);
 
-    await this.RefreshTokenModel.create({
-      token: refreshToken,
-      userId,
-     expiryDate: expiryDate,
-    });
-  }
+  await this.RefreshTokenModel.updateOne(
+    { userId }, 
+    { $set: { token: refreshToken, expiryDate } },       
+    { upsert: true }                
+  );
+}
+
 }
